@@ -47,9 +47,15 @@ PanelWindow {
         }
     }
 
+    function resolveEnvVars(inputPath) {
+        return inputPath.replace(/\$(\w+)/g, function(match, varName) {
+            return Quickshell.env(varName) ?? "";
+        });
+    }
+
     FolderListModel {
         id: folderModel
-        folder: "file://" + configs.wallpaper_path
+        folder: "file://" + resolveEnvVars(configs.wallpaper_path)
         showDirs: false
         nameFilters: ["*.png","*.jpg"]
         sortField: FolderListModel.Name
@@ -137,7 +143,7 @@ PanelWindow {
                 cache: false
                 smooth: true
 
-                source: "file://" + configs.cache_path + fileName
+                source: "file://" + resolveEnvVars(configs.cache_path) + fileName
 
                 sourceSize.width: width
                 sourceSize.height: height
