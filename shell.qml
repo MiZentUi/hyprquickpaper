@@ -1,9 +1,8 @@
 import Quickshell
-import Quickshell.Io // for Process
+import Quickshell.Io
 import QtQuick
 import Qt.labs.folderlistmodel
 import Quickshell.Wayland
-
 
 
 PanelWindow {
@@ -34,6 +33,16 @@ PanelWindow {
             property string wallpaper_path
             property string cache_path
             property int number_of_pictures
+        }
+    }
+
+    FileView {
+        path: Quickshell.shellPath("colors.json")
+        watchChanges: true
+        onFileChanged: reload()
+
+        JsonAdapter {
+            id: colors
             property string border_color
         }
     }
@@ -55,7 +64,6 @@ PanelWindow {
         orientation: ListView.Horizontal
         spacing: 4
         clip: true
-        // reuseItems: true
         cacheBuffer: width * 2
 
         property int selectedIndex: 0
@@ -90,42 +98,36 @@ PanelWindow {
             SmoothedAnimation {
                 id: anim
                 property int v: 10
-                // velocity: v
                 duration: 100
             }
         }
+
         Component.onCompleted:{
             anim.v = main.speed
         }
 
-
         delegate: Item {
             property bool active: index === list.selectedIndex
             width: list.tileWidth
-            // width: active? 1000:list.tileWidth
+            
             height: 500
-            // visible: shownNow
+
             Behavior on width{
                 NumberAnimation {
                     duration: 50
                     easing.type: Easing.OutCubic
                 }
             }
-            // anchors.centerIn: parent
-
-
-            // property bool shownNow:
-            //     index >= list.selectedIndex - configs.number_of_pictures &&
-            //     index <= list.selectedIndex + configs.number_of_pictures
 
             Text{
                 id: alt
                 text: "Loading..."
-                color: configs.border_color
+                color: colors.border_color
                 anchors.centerIn: parent
                 font.pixelSize: 16
                 transform: Shear { xFactor: -0.25 }
             }
+
             Image {
                 id: img
                 anchors.fill: parent
@@ -136,11 +138,6 @@ PanelWindow {
                 smooth: true
 
                 source: "file://" + configs.cache_path + fileName
-
-                // kind of an on-demand loading
-                // source: shownNow
-                //     ? "file://" + configs.cache_path + fileName
-                //     : ""
 
                 sourceSize.width: width
                 sourceSize.height: height
@@ -165,6 +162,7 @@ PanelWindow {
                     }
                 }
             }
+
             Rectangle {
                 id: border
                 z: 10
@@ -174,18 +172,9 @@ PanelWindow {
                 color: "transparent"
 
                 border.width: 4
-                border.color: configs.border_color
+                border.color: colors.border_color
 
                 transform: Shear { xFactor: -0.25 }
-
-                // x: list.selectedIndex * (width + list.spacing) - list.contentX
-
-                // Behavior on x {
-                //     NumberAnimation {
-                //         duration: 160
-                //         easing.type: Easing.OutCubic
-                //     }
-                // }
             }
 
             MouseArea {
