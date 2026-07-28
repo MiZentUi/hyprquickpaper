@@ -143,7 +143,7 @@ PanelWindow {
                 cache: false
                 smooth: true
 
-                source: "file://" + resolveEnvVars(configs.cache_path) + fileName
+                source: "file://" + resolveEnvVars(configs.cache_path) + "/" + fileName
 
                 sourceSize.width: width
                 sourceSize.height: height
