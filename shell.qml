@@ -204,14 +204,26 @@ PanelWindow {
             const step = 1
             const big = configs.number_of_pictures
 
-            if (event.key === Qt.Key_J) {
+            if (event.key === Qt.Key_J || event.key === Qt.Key_L || 
+                event.key === Qt.Key_Down || event.key === Qt.Key_Right) {
                 anim.v = main.speed
                 selectedIndex = clampIndex(selectedIndex + step)
                 ensureVisibleAnimated(selectedIndex)
 
-            } else if (event.key === Qt.Key_K) {
+            } else if (event.key === Qt.Key_K || event.key === Qt.Key_H ||
+                event.key === Qt.Key_Up || event.key === Qt.Key_Left) {
                 anim.v = main.speed
                 selectedIndex = clampIndex(selectedIndex - step)
+                ensureVisibleAnimated(selectedIndex)
+
+            } else if (event.key === Qt.Key_Tab) {
+                anim.v = main.speed
+                selectedIndex = clampIndex((selectedIndex + step) % count)
+                ensureVisibleAnimated(selectedIndex)
+            
+            } else if (event.key === Qt.Key_Backtab) {
+                anim.v = main.speed
+                selectedIndex = clampIndex(((selectedIndex - step) % count + count) % count)
                 ensureVisibleAnimated(selectedIndex)
 
             } else if (event.key === Qt.Key_D) {
