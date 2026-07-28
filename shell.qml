@@ -19,8 +19,7 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
     Component.onCompleted: {
-        Quickshell.execDetached(["bash", Quickshell.shellPath("cache.sh"), Quickshell.shellDir])
-        console.log(Quickshell.shellDir)
+        Quickshell.execDetached(["bash", Quickshell.shellPath("cache.sh"), Quickshell.shellDir])  
     }
 
     FileView {
@@ -29,7 +28,7 @@ PanelWindow {
         onFileChanged: reload()
 
         JsonAdapter {
-            id: configs
+            id: config
             property string wallpaper_path
             property string cache_path
             property int number_of_pictures
@@ -49,6 +48,23 @@ PanelWindow {
         }
     }
 
+    FileView {
+        id: current
+        blockLoading: true
+
+        path: config.cache_path ? "file://" + resolveEnvVars(config.cache_path) + "/current" : ""
+
+        onPathChanged: {
+            if (path !== "") {
+                reload()
+            }
+        }
+
+        onLoaded: {
+            list.selectCurrent(text().trim())
+        }
+    }
+
     function resolveEnvVars(inputPath) {
         return inputPath.replace(/\$(\w+)/g, function(match, varName) {
             return Quickshell.env(varName) ?? "";
@@ -57,10 +73,16 @@ PanelWindow {
 
     FolderListModel {
         id: folderModel
-        folder: "file://" + resolveEnvVars(configs.wallpaper_path)
+        folder: "file://" + resolveEnvVars(config.wallpaper_path)
         showDirs: false
         nameFilters: ["*.png","*.jpg"]
         sortField: FolderListModel.Name
+
+        onCountChanged: {
+            if (count > 0 && current.status === FileView.Ready) {
+                list.selectCurrent(current.text().trim())
+            }
+        }
     }
 
     ListView {
@@ -75,19 +97,41 @@ PanelWindow {
         cacheBuffer: width * 2
 
         property int selectedIndex: 0
-        property real tileWidth: width / configs.number_of_pictures - 10
+        property real tileWidth: width / config.number_of_pictures - 10
 
-        property real shearOffset: configs.height * Math.abs(configs.x_factor)
+        property real shearOffset: config.height * Math.abs(config.x_factor)
 
-        leftMargin: configs.x_factor < 0 ? shearOffset : 0
+        leftMargin: config.x_factor < 0 ? shearOffset : 0
 
         function clampIndex(i) {
             return Math.max(0, Math.min(i, count - 1))
+        }
+        
+        property bool initialPosition: true
+
+        function selectCurrent(current) {
+            for (let i = 0; i < folderModel.count; ++i) {
+                console.log(folderModel.get(i, "filePath"))
+                if (folderModel.get(i, "fileName") === current) {
+                    selectedIndex = i
+
+                    initialPosition = true
+                    ensureVisibleAnimated(i)
+
+                    Qt.callLater(() => {
+                        initialPosition = false
+                    })
+
+                    return
+                }
+            }
         }
 
         function activateCurrent() {
             const path = folderModel.get(selectedIndex, "filePath")
             Quickshell.execDetached(["bash", Quickshell.shellPath("commands.sh"), path])
+            Quickshell.execDetached(["sh", "-c", "echo " + folderModel.get(selectedIndex, "fileName") + ">" 
+                + resolveEnvVars(config.cache_path) + "/current"])
             Qt.quit()
         }
 
@@ -95,7 +139,7 @@ PanelWindow {
             const max = contentWidth - width
             const clamped = Math.max(0, Math.min(x, max))
 
-            return configs.x_factor < 0
+            return config.x_factor < 0
                 ? (clamped === 0 ? -shearOffset : clamped)
                 : (clamped === 0 ? 0 : clamped === max ? x + shearOffset : clamped)
         }
@@ -105,17 +149,18 @@ PanelWindow {
             const itemStart = i * step
             const itemEnd = itemStart + tileWidth + 20
 
-            if (itemStart < contentX)
-                contentX = clampX(itemStart)
-            else if (itemEnd > contentX + width)
-                contentX = clampX(itemStart - (width - step))
+            contentX = clampX(
+                itemStart - (width - tileWidth) / 2
+            )
         }
 
         Behavior on contentX {
+            enabled: !list.initialPosition
+
             SmoothedAnimation {
                 id: anim
                 property int v: 10
-                duration: 100
+                duration: 500
             }
         }
 
@@ -127,7 +172,7 @@ PanelWindow {
             property bool active: index === list.selectedIndex
             width: list.tileWidth
             
-            height: configs.height
+            height: config.height
 
             Behavior on width {
                 NumberAnimation {
@@ -142,7 +187,7 @@ PanelWindow {
                 color: colors.border_color
                 anchors.centerIn: parent
                 font.pixelSize: 16
-                transform: Shear { xFactor: configs.x_factor }
+                transform: Shear { xFactor: config.x_factor }
             }
 
             Image {
@@ -154,12 +199,12 @@ PanelWindow {
                 cache: false
                 smooth: true
 
-                source: "file://" + resolveEnvVars(configs.cache_path) + "/" + fileName
+                source: "file://" + resolveEnvVars(config.cache_path) + "/" + fileName
 
                 sourceSize.width: width
                 sourceSize.height: height
 
-                transform: Shear { xFactor: configs.x_factor }
+                transform: Shear { xFactor: config.x_factor }
 
                 Timer {
                     id: retryTimer
@@ -185,13 +230,13 @@ PanelWindow {
                 z: 10
                 visible: parent.active
                 width: list.tileWidth
-                height: configs.height
+                height: config.height
                 color: "transparent"
 
                 border.width: 4
                 border.color: colors.border_color
 
-                transform: Shear { xFactor: configs.x_factor }
+                transform: Shear { xFactor: config.x_factor }
             }
 
             MouseArea {
@@ -213,7 +258,7 @@ PanelWindow {
 
         Keys.onPressed: function(event) {
             const step = 1
-            const big = configs.number_of_pictures
+            const big = config.number_of_pictures
 
             if (event.key === Qt.Key_J || event.key === Qt.Key_L || 
                 event.key === Qt.Key_Down || event.key === Qt.Key_Right) {
