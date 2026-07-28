@@ -1,12 +1,9 @@
-#!/usr/bin/env bash
-
+#!/usr/bin/env sh
 
 CONFIG="$1/config.json"
 
-
-
-wallpaper_path=$(jq -r '.wallpaper_path' "$CONFIG")
-cache_path=$(jq -r '.cache_path' "$CONFIG")
+wallpaper_path=$(jq -r '.wallpaper_path' "$CONFIG" | envsubst)
+cache_path=$(jq -r '.cache_path' "$CONFIG" | envsubst)
 cache_batch_size=$(jq -r '.cache_batch_size' "$CONFIG")
 
 mkdir -p "$cache_path"
@@ -28,7 +25,6 @@ find "$wallpaper_path" -type f \( \
     fi
 
     echo "Generating thumbnail for $filename"
-
 
     convert "$img" -thumbnail x500 -strip -quality 85 "$out" &
 
