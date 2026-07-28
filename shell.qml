@@ -33,6 +33,8 @@ PanelWindow {
             property string wallpaper_path
             property string cache_path
             property int number_of_pictures
+            property int height
+            property real x_factor
         }
     }
 
@@ -75,6 +77,10 @@ PanelWindow {
         property int selectedIndex: 0
         property real tileWidth: width / configs.number_of_pictures - 10
 
+        property real shearOffset: configs.height * Math.abs(configs.x_factor)
+
+        leftMargin: configs.x_factor < 0 ? shearOffset : 0
+
         function clampIndex(i) {
             return Math.max(0, Math.min(i, count - 1))
         }
@@ -86,7 +92,12 @@ PanelWindow {
         }
 
         function clampX(x) {
-            return Math.max(0, Math.min(x, contentWidth - width))
+            const max = contentWidth - width
+            const clamped = Math.max(0, Math.min(x, max))
+
+            return configs.x_factor < 0
+                ? (clamped === 0 ? -shearOffset : clamped)
+                : (clamped === 0 ? 0 : clamped === max ? x + shearOffset : clamped)
         }
 
         function ensureVisibleAnimated(i) {
@@ -108,7 +119,7 @@ PanelWindow {
             }
         }
 
-        Component.onCompleted:{
+        Component.onCompleted: {
             anim.v = main.speed
         }
 
@@ -116,22 +127,22 @@ PanelWindow {
             property bool active: index === list.selectedIndex
             width: list.tileWidth
             
-            height: 500
+            height: configs.height
 
-            Behavior on width{
+            Behavior on width {
                 NumberAnimation {
                     duration: 50
                     easing.type: Easing.OutCubic
                 }
             }
 
-            Text{
+            Text {
                 id: alt
                 text: "Loading..."
                 color: colors.border_color
                 anchors.centerIn: parent
                 font.pixelSize: 16
-                transform: Shear { xFactor: -0.25 }
+                transform: Shear { xFactor: configs.x_factor }
             }
 
             Image {
@@ -148,7 +159,7 @@ PanelWindow {
                 sourceSize.width: width
                 sourceSize.height: height
 
-                transform: Shear { xFactor: -0.25 }
+                transform: Shear { xFactor: configs.x_factor }
 
                 Timer {
                     id: retryTimer
@@ -174,13 +185,13 @@ PanelWindow {
                 z: 10
                 visible: parent.active
                 width: list.tileWidth
-                height: 500
+                height: configs.height
                 color: "transparent"
 
                 border.width: 4
                 border.color: colors.border_color
 
-                transform: Shear { xFactor: -0.25 }
+                transform: Shear { xFactor: configs.x_factor }
             }
 
             MouseArea {
