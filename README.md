@@ -8,7 +8,7 @@ PRs and contributions are appreciated.
 
 ## Demo
 
-https://github.com/user-attachments/assets/375e3696-e62d-48bf-8af6-18d2be86b224
+https://github.com/user-attachments/assets/0e7d08ca-2ec1-45e6-a216-348061faa714
 
 ## Key features
 
