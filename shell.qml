@@ -4,7 +4,6 @@ import QtQuick
 import Qt.labs.folderlistmodel
 import Quickshell.Wayland
 
-
 PanelWindow {
     id: main
     implicitHeight: 500
@@ -19,7 +18,7 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
     Component.onCompleted: {
-        Quickshell.execDetached(["bash", Quickshell.shellPath("cache.sh"), Quickshell.shellDir])  
+        Quickshell.execDetached(["bash", Quickshell.shellPath("cache.sh"), Quickshell.shellDir]);
     }
 
     FileView {
@@ -56,17 +55,17 @@ PanelWindow {
 
         onPathChanged: {
             if (path !== "") {
-                reload()
+                reload();
             }
         }
 
         onLoaded: {
-            list.selectCurrent(text().trim())
+            list.selectCurrent(text().trim());
         }
     }
 
     function resolveEnvVars(inputPath) {
-        return inputPath.replace(/\$(\w+)/g, function(match, varName) {
+        return inputPath.replace(/\$(\w+)/g, function (match, varName) {
             return Quickshell.env(varName) ?? "";
         });
     }
@@ -75,12 +74,12 @@ PanelWindow {
         id: folderModel
         folder: "file://" + resolveEnvVars(config.wallpaper_path)
         showDirs: false
-        nameFilters: ["*.png","*.jpg"]
+        nameFilters: ["*.png", "*.jpg"]
         sortField: FolderListModel.Name
 
         onCountChanged: {
             if (count > 0 && current.status === FileView.Ready) {
-                list.selectCurrent(current.text().trim())
+                list.selectCurrent(current.text().trim());
             }
         }
     }
@@ -104,54 +103,49 @@ PanelWindow {
         leftMargin: config.x_factor < 0 ? shearOffset : 0
 
         function clampIndex(i) {
-            return Math.max(0, Math.min(i, count - 1))
+            return Math.max(0, Math.min(i, count - 1));
         }
-        
+
         property bool initialPosition: true
 
         function selectCurrent(current) {
             for (let i = 0; i < folderModel.count; ++i) {
-                console.log(folderModel.get(i, "filePath"))
+                console.log(folderModel.get(i, "filePath"));
                 if (folderModel.get(i, "fileName") === current) {
-                    selectedIndex = i
+                    selectedIndex = i;
 
-                    initialPosition = true
-                    ensureVisibleAnimated(i)
+                    initialPosition = true;
+                    ensureVisibleAnimated(i);
 
                     Qt.callLater(() => {
-                        initialPosition = false
-                    })
+                        initialPosition = false;
+                    });
 
-                    return
+                    return;
                 }
             }
         }
 
         function activateCurrent() {
-            const path = folderModel.get(selectedIndex, "filePath")
-            Quickshell.execDetached(["bash", Quickshell.shellPath("commands.sh"), path])
-            Quickshell.execDetached(["sh", "-c", "echo " + folderModel.get(selectedIndex, "fileName") + ">" 
-                + resolveEnvVars(config.cache_path) + "/current"])
-            Qt.quit()
+            const path = folderModel.get(selectedIndex, "filePath");
+            Quickshell.execDetached(["bash", Quickshell.shellPath("commands.sh"), path]);
+            Quickshell.execDetached(["sh", "-c", "echo " + folderModel.get(selectedIndex, "fileName") + ">" + resolveEnvVars(config.cache_path) + "/current"]);
+            Qt.quit();
         }
 
         function clampX(x) {
-            const max = contentWidth - width
-            const clamped = Math.max(0, Math.min(x, max))
+            const max = contentWidth - width;
+            const clamped = Math.max(0, Math.min(x, max));
 
-            return config.x_factor < 0
-                ? (clamped === 0 ? -shearOffset : clamped)
-                : (clamped === 0 ? 0 : clamped === max ? x + shearOffset : clamped)
+            return config.x_factor < 0 ? (clamped === 0 ? -shearOffset : clamped) : (clamped === 0 ? 0 : clamped === max ? x + shearOffset : clamped);
         }
 
         function ensureVisibleAnimated(i) {
-            const step = tileWidth + spacing
-            const itemStart = i * step
-            const itemEnd = itemStart + tileWidth + 20
+            const step = tileWidth + spacing;
+            const itemStart = i * step;
+            const itemEnd = itemStart + tileWidth + 20;
 
-            contentX = clampX(
-                itemStart - (width - tileWidth) / 2
-            )
+            contentX = clampX(itemStart - (width - tileWidth) / 2);
         }
 
         Behavior on contentX {
@@ -165,13 +159,13 @@ PanelWindow {
         }
 
         Component.onCompleted: {
-            anim.v = main.speed
+            anim.v = main.speed;
         }
 
         delegate: Item {
             property bool active: index === list.selectedIndex
             width: list.tileWidth
-            
+
             height: config.height
 
             Behavior on width {
@@ -187,7 +181,9 @@ PanelWindow {
                 color: colors.border_color
                 anchors.centerIn: parent
                 font.pixelSize: 16
-                transform: Shear { xFactor: config.x_factor }
+                transform: Shear {
+                    xFactor: config.x_factor
+                }
             }
 
             Image {
@@ -204,23 +200,25 @@ PanelWindow {
                 sourceSize.width: width
                 sourceSize.height: height
 
-                transform: Shear { xFactor: config.x_factor }
+                transform: Shear {
+                    xFactor: config.x_factor
+                }
 
                 Timer {
                     id: retryTimer
                     interval: 1000
                     repeat: false
                     onTriggered: {
-                        let s = img.source
-                        img.source = ""
-                        img.source = s
+                        let s = img.source;
+                        img.source = "";
+                        img.source = s;
                     }
                 }
 
                 onStatusChanged: {
                     if (status === Image.Error) {
-                        alt.text = "Caching"
-                        retryTimer.start()
+                        alt.text = "Caching";
+                        retryTimer.start();
                     }
                 }
             }
@@ -236,71 +234,61 @@ PanelWindow {
                 border.width: 4
                 border.color: colors.border_color
 
-                transform: Shear { xFactor: config.x_factor }
+                transform: Shear {
+                    xFactor: config.x_factor
+                }
             }
 
             MouseArea {
                 anchors.fill: parent
 
                 onClicked: {
-                    list.selectedIndex = index
-                    list.activateCurrent()
+                    list.selectedIndex = index;
+                    list.activateCurrent();
                 }
 
-                onWheel: function(wheel) {
-                    list.contentX = list.clampX(
-                        list.contentX - wheel.angleDelta.y * 2
-                    )
-                    wheel.accepted = false
+                onWheel: function (wheel) {
+                    list.contentX = list.clampX(list.contentX - wheel.angleDelta.y * 2);
+                    wheel.accepted = false;
                 }
             }
         }
 
-        Keys.onPressed: function(event) {
-            const step = 1
-            const big = config.number_of_pictures
+        Keys.onPressed: function (event) {
+            const step = 1;
+            const big = config.number_of_pictures;
 
-            if (event.key === Qt.Key_J || event.key === Qt.Key_L || 
-                event.key === Qt.Key_Down || event.key === Qt.Key_Right) {
-                anim.v = main.speed
-                selectedIndex = clampIndex(selectedIndex + step)
-                ensureVisibleAnimated(selectedIndex)
-
-            } else if (event.key === Qt.Key_K || event.key === Qt.Key_H ||
-                event.key === Qt.Key_Up || event.key === Qt.Key_Left) {
-                anim.v = main.speed
-                selectedIndex = clampIndex(selectedIndex - step)
-                ensureVisibleAnimated(selectedIndex)
-
+            if (event.key === Qt.Key_J || event.key === Qt.Key_L || event.key === Qt.Key_Down || event.key === Qt.Key_Right) {
+                anim.v = main.speed;
+                selectedIndex = clampIndex(selectedIndex + step);
+                ensureVisibleAnimated(selectedIndex);
+            } else if (event.key === Qt.Key_K || event.key === Qt.Key_H || event.key === Qt.Key_Up || event.key === Qt.Key_Left) {
+                anim.v = main.speed;
+                selectedIndex = clampIndex(selectedIndex - step);
+                ensureVisibleAnimated(selectedIndex);
             } else if (event.key === Qt.Key_Tab) {
-                anim.v = main.speed
-                selectedIndex = clampIndex((selectedIndex + step) % count)
-                ensureVisibleAnimated(selectedIndex)
-            
+                anim.v = main.speed;
+                selectedIndex = clampIndex((selectedIndex + step) % count);
+                ensureVisibleAnimated(selectedIndex);
             } else if (event.key === Qt.Key_Backtab) {
-                anim.v = main.speed
-                selectedIndex = clampIndex(((selectedIndex - step) % count + count) % count)
-                ensureVisibleAnimated(selectedIndex)
-
+                anim.v = main.speed;
+                selectedIndex = clampIndex(((selectedIndex - step) % count + count) % count);
+                ensureVisibleAnimated(selectedIndex);
             } else if (event.key === Qt.Key_D) {
-                anim.v = main.speed * big
-                selectedIndex = clampIndex(selectedIndex + big)
-                ensureVisibleAnimated(selectedIndex)
-
+                anim.v = main.speed * big;
+                selectedIndex = clampIndex(selectedIndex + big);
+                ensureVisibleAnimated(selectedIndex);
             } else if (event.key === Qt.Key_U) {
-                anim.v = main.speed * big
-                selectedIndex = clampIndex(selectedIndex - big)
-                ensureVisibleAnimated(selectedIndex)
-
+                anim.v = main.speed * big;
+                selectedIndex = clampIndex(selectedIndex - big);
+                ensureVisibleAnimated(selectedIndex);
             } else if (event.key === Qt.Key_Space || event.key === Qt.Key_Return) {
-                activateCurrent()
-
+                activateCurrent();
             } else if (event.key === Qt.Key_Escape) {
-                Qt.quit()
-
-            } else return
-
-            event.accepted = true
+                Qt.quit();
+            } else
+                return;
+            event.accepted = true;
         }
     }
 }
