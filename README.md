@@ -1,28 +1,36 @@
 # HyprQuickPaper
 
-Wallpaper selector made using quickshell. Inspired by : [ilyamiro's dots](https://github.com/ilyamiro/nixos-configuration)
+Wallpaper selector made using quickshell. Inspired by [ilyamiro's dots](https://github.com/ilyamiro/nixos-configuration)
 PRs and contributions are appreciated.
 
 > [!IMPORTANT]
-> Make sure to read the entire config and usage section before using
+> Make sure to read the entire config and usage sections before using.
 
 ## Demo
 
 https://github.com/user-attachments/assets/375e3696-e62d-48bf-8af6-18d2be86b224
 
+## Key features
+
+- Wallpaper selection with thumbnails
+- Saves the position of the currently selected wallpaper
+- Customizable colors using generation tools like Matugen
 
 ## Dependencies
 
 - [quickshell](https://git.outfoxxed.me/quickshell/quickshell)
+- jq
+- file
+- ImageMagick (magick, with convert fallback)
 
 ## Installation
 
 ### Arch
 
-Get Quickshell with yay (or your AUR helper of choice)
+Install dependencies
 
 ```bash
-yay -S quickshell
+sudo pacman -S quickshell jq file imagemagick
 ```
 
 Now just clone this repo into Quickshell's config folder
@@ -31,28 +39,39 @@ Now just clone this repo into Quickshell's config folder
 git clone https://github.com/iamsurjog/hyprquickpaper ~/.config/quickshell/hyprquickpaper
 ```
 
-## config
+## Config
 
-go to the `config.json` file and change the `"wallpaper_path"` and the `"cache_path"` variables
+Go to the `config.json` file and change the `"wallpaper_path"` and the `"cache_path"` variables
 
-> [!IMPORTANT]
-> Make sure to use absolute path (/home/...) for the path and put the trailing "/" at the end of the path
+Example `config.json`
 
-Example config.json
-```{json}
+```json
 {
-    "wallpaper_path": "/home/<usrname>/Pictures/Wallpapers/",
-    "cache_path": "/home/<usrname>/.cache/quickshell/thumbs/",
-    "number_of_pictures": 7,
-    "border_color": "#A98881",
-    "cache_batch_size": 20
+    "wallpaper_path": "$HOME/dotfiles/images/wallpapers/",
+    "cache_path": "$HOME/.cache/quickshell/hyprquickpaper/",
+    "number_of_pictures": 6,
+    "cache_batch_size": 20,
+    "height": 500,
+    "x_factor": -0.25
 }
 ```
 
-Also add your wallpaper changing commands to the `commands.sh` file. Selecting a wallpaper runs the command with the path to the wallpaper passed as a parameter. An example on how to use it with swww is given.
+Example `colors.json`
 
-```{bash}
+```json
+{
+    "border_color": "#ffa500"
+}
+```
+
+Also add your wallpaper changing commands to the `commands.sh` file. Selecting a wallpaper runs the command with the path to the wallpaper passed as the first argument. An example on how to use it with swww or wpaperd is given.
+
+```bash
 swww img $1 -t grow --transition-duration 1
+```
+
+```bash
+wpaperctl set $1
 ```
 
 You can change the number of pictures cached async at the same time by changing `cache_batch_size`. Making it zero or less will try to cache all the images at the same time
@@ -60,7 +79,11 @@ You can change the number of pictures cached async at the same time by changing 
 > [!WARNING]
 > Trying to cache all the images at the same time could severly affect your performance. Do it only when the number of wallpapers is a managable amount
 
-`number_of_pictures` changes the number of pictures that are shown on the screen at a time
+### Other attributes
+
+- `number_of_pictures` - the number of pictures that are shown on the screen at a time.
+- `height` - height of the thumbnails.
+- `x_factor` - a digital shift that tilts a shape sideways.
 
 ## Usage
 
@@ -70,23 +93,28 @@ Now you're ready to launch HyprQuickPaper from your terminal, or add it to your 
 quickshell -c hyprquickpaper
 ```
 
-Add this line to your `hyprland.conf` to bind HyprQuickPaper to Super + W.
+Add one of the above lines to your `hyprland.conf` or `hyprland.lua` to bind HyprQuickPaper to Super + W.
 
 ```hypr
-bind = $mainMod, w, exec, quickshell -c hyprquickshot
+bind = $mainMod, W, exec, quickshell -c hyprquickpaper
+```
+
+```lua
+hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("quickshell -c hyprquickpaper"))
 ```
 
 On using it for the first time it will not load anything. Press escape and then restart it and it should load the wallpapers.
 
-### Keybinds:
+### Keybinds
 
-- J/K to scroll to 1 left/right respectively
-- D/U to scroll 1 screen worth left/right respectively
+- H/L, K/J, or the arrow keys to scroll one wallpaper left/right
+- U/D to scroll one screen worth left/right respectively
+- Tab or Backtab to scroll cyclically
 - Esc to quit out
 - Space/Enter(or return) to select wallpaper
 - Scrolling/click and dragging also works for scrolling
 - Clicking also allows selection of a wallpaper
 
 ## Common fixes
-- remove everything from the cache folder
-- Make sure to use absolute path (/home/...) for the path and put the trailing "/" at the end of the path
+
+- Remove everything from the cache folder

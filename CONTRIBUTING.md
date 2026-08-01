@@ -41,9 +41,6 @@ You are welcome to experiment with **refactoring**, but please note:
 
 Here are a few open issues that would make good contributions:
 
-- [ ] **Path handling bug**  
-      Missing the trailing `/` in paths inside `config.json` currently breaks the program.
-
 - [ ] **Customizable image transform**  
       The image currently uses a hardcoded **shear transform**. Making this transform configurable would improve customization.
 
