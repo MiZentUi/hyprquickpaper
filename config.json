@@ -1,5 +1,5 @@
 {
-    "wallpaper_path": "$HOME/dotfiles/images/wallpapers/",
+    "wallpaper_path": "$HOME/Wallpapers",
     "cache_path": "$HOME/.cache/quickshell/hyprquickpaper/",
     "number_of_pictures": 6,
     "cache_batch_size": 20,
