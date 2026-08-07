@@ -13,6 +13,7 @@ https://github.com/user-attachments/assets/0e7d08ca-2ec1-45e6-a216-348061faa714
 ## Key features
 
 - Wallpaper selection with thumbnails
+- Recursive wallpaper search
 - Saves the position of the currently selected wallpaper
 - Customizable colors using generation tools like Matugen
 
