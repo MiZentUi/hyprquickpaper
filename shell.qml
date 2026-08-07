@@ -60,7 +60,7 @@ PanelWindow {
     }
 
     Persistence {
-        id: current_walpaper
+        id: current_wallpaper
         path: main.resolveEnvVars(config_file.adapter.cache_path) + '/.current'
     }
 
@@ -71,11 +71,20 @@ PanelWindow {
         model: ListModel {}
         config: config_file.adapter
         colors: colors_file.adapter
-        selectedIndex: Number(current_walpaper.load())
+        selectedIndex: Number(findIndexByPath(current_wallpaper.load()))
         onSelected: (path, i) => {
-            current_walpaper.save(`${i}`);
+            current_wallpaper.save(path.replace("//", "/"));
             Quickshell.execDetached(["bash", Quickshell.shellPath("commands.sh"), path.replace(/ /g, "\\ ")]);
             Qt.quit();
+        }
+
+        function findIndexByPath(targetPath) {
+            for (var i = 0; i < model.count; ++i) {
+                if (model.get(i).filePath.replace("//", "/") === targetPath.replace("//", "/")) {
+                    return i;
+                }
+            }
+            return -1;
         }
     }
 }
