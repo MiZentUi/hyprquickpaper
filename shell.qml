@@ -15,7 +15,6 @@ PanelWindow {
 
     aboveWindows: true
     exclusionMode: "Ignore"
-
     exclusiveZone: 1
 
     WlrLayershell.layer: WlrLayer.Overlay
@@ -31,6 +30,7 @@ PanelWindow {
     }
 
     FileView {
+        id: config_file
         path: Quickshell.shellPath("config.json")
         watchChanges: true
         onFileChanged: reload()
@@ -41,41 +41,36 @@ PanelWindow {
         onLoaded: {
             img_finder.running = true;
         }
-
-        ConfigAdapter {
-            id: config
-        }
+        ConfigAdapter {}
     }
 
     PathFinder {
         id: img_finder
         target_model: selector.model
-        path: main.resolveEnvVars(config.wallpaper_path)
+        path: main.resolveEnvVars(config_file.adapter.wallpaper_path)
+        cache_path: main.resolveEnvVars(config_file.adapter.cache_path)
     }
 
     FileView {
+        id: colors_file
         path: Quickshell.shellPath("colors.json")
         watchChanges: true
         onFileChanged: reload()
-
-        ColorsAdapter {
-            id: colors
-        }
+        ColorsAdapter {}
     }
 
     Persistence {
         id: current_walpaper
-        path: main.resolveEnvVars(config.cache_path) + '/.current'
-
+        path: main.resolveEnvVars(config_file.adapter.cache_path) + '/.current'
     }
 
     Selector {
         id: selector
         anchors.fill: parent
         focus: true
-        model: ListModel { }
-        config: config
-        colors: colors
+        model: ListModel {}
+        config: config_file.adapter
+        colors: colors_file.adapter
         selectedIndex: Number(current_walpaper.load())
         onSelected: (path, i) => {
             current_walpaper.save(`${i}`);

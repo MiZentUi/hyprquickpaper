@@ -8,6 +8,7 @@ Item {
     required property ColorsAdapter colors
     required property string fileName
     required property string filePath
+    required property string cashePath   
     required property int selectedIndex
 
     property bool active: index === selectedIndex
@@ -43,7 +44,7 @@ Item {
         cache: false
         smooth: true
 
-        source: "file://" + root.filePath
+        source: "file://" + root.cashePath
 
         sourceSize.width: width
         sourceSize.height: height

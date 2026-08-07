@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 CONFIG="$1/config.json"
 
@@ -24,7 +24,8 @@ while IFS= read -r img; do
 
     mkdir -p "$(dirname "$output_file")"
 
-    convert "$img" -thumbnail x500 -strip -quality 85 "$out" &
+    echo "Generating thumbnail for $img"
+    convert "$input_file" -thumbnail x500 -strip -quality 85 "$output_file" &
 
     if (( cache_batch_size > 0 )); then
         while (( $(jobs -rp | wc -l) >= cache_batch_size )); do

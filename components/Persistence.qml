@@ -12,7 +12,6 @@ Item {
 
     function save(value) {
         root.value = value;
-        console.log(file.path)
         file.setText(root.value);
     }
     function load() {
