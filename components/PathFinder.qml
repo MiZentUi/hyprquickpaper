@@ -25,7 +25,6 @@ Process {
                     filePath: root.path + '/' + el,
                     cashePath: root.cache_path + '/' + el
                 });
-                console.log(el);
             });
         }
     }
