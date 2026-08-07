@@ -23,20 +23,6 @@ If your change introduces new configurable behavior:
 
 Please avoid hard-coding user-configurable values directly in the code.
 
-## Project Structure
-
-Currently, the project is intentionally kept **simple**:
-
-- The UI logic exists in a **single QML file**.
-- Since the project is still small, there is **no separate documentation folder**.
-
-If the project grows larger in the future, the codebase may be refactored.
-
-You are welcome to experiment with **refactoring**, but please note:
-
-- Some internal structure choices are intentional.
-- Large structural changes may be rejected if they conflict with the project's design goals.
-
 ## Things You Can Contribute To
 
 Here are a few open issues that would make good contributions:
