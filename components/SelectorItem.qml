@@ -66,7 +66,7 @@ Item {
 
         onStatusChanged: {
             if (status === Image.Error) {
-                alt.text = "Caching";
+                alt.text = "Caching...";
                 retryTimer.start();
             }
         }
