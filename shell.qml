@@ -8,7 +8,7 @@ import "components"
 
 PanelWindow {
     id: main
-    implicitHeight: 500
+    implicitHeight: config_file.adapter.height
     implicitWidth: Screen.width
     color: "transparent"
     property int speed: 5000
