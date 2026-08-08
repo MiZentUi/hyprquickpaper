@@ -17,7 +17,6 @@ while IFS= read -r img; do
     input_file="$wallpaper_path/$img"
     output_file="$cache_path/$img"
 
-
     if [[ -f "$output_file" ]]; then
         continue
     fi
@@ -25,7 +24,7 @@ while IFS= read -r img; do
     mkdir -p "$(dirname "$output_file")"
 
     echo "Generating thumbnail for $img"
-    convert "$input_file" -thumbnail x500 -strip -quality 85 "$output_file" &
+    magick "$input_file" -thumbnail x500 -fuzz 10% -trim -strip "$output_file" &
 
     if (( cache_batch_size > 0 )); then
         while (( $(jobs -rp | wc -l) >= cache_batch_size )); do
