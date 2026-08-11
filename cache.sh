@@ -24,7 +24,7 @@ while IFS= read -r img; do
     mkdir -p "$(dirname "$output_file")"
 
     echo "Generating thumbnail for $img"
-    magick "$input_file" -thumbnail x500 -fuzz 10% -trim -strip "$output_file" &
+    magick "$input_file" -thumbnail x1000 -fuzz 10% -trim -strip "$output_file" &
 
     if (( cache_batch_size > 0 )); then
         while (( $(jobs -rp | wc -l) >= cache_batch_size )); do

@@ -71,20 +71,51 @@ PanelWindow {
         model: ListModel {}
         config: config_file.adapter
         colors: colors_file.adapter
-        selectedIndex: Number(findIndexByPath(current_wallpaper.load()))
+        selectedIndex: 0
+        onCountChanged: selectCurrentWallpaper()
         onSelected: (path, i) => {
             current_wallpaper.save(path.replace("//", "/"));
             Quickshell.execDetached(["bash", Quickshell.shellPath("commands.sh"), path.replace(/ /g, "\\ ")]);
             Qt.quit();
         }
 
+        Component.onCompleted: selectCurrentWallpaper()
+
+        function selectCurrentWallpaper() {
+            if (!current_wallpaper.isReady || model.count <= 0)
+                return;
+
+            selectInitialIndex(findIndexByPath(current_wallpaper.load()));
+        }
+
+        function normalizePath(path) {
+            return (path || "").replace(/\/+/g, "/");
+        }
+
         function findIndexByPath(targetPath) {
+            const normalizedTarget = normalizePath(targetPath);
+
+            if (normalizedTarget === "")
+                return 0;
+
             for (var i = 0; i < model.count; ++i) {
-                if (model.get(i).filePath.replace("//", "/") === targetPath.replace("//", "/")) {
+                const item = model.get(i);
+                const itemPath = normalizePath(item.filePath);
+                const itemName = normalizePath(item.fileName);
+
+                if (itemPath === normalizedTarget || itemName === normalizedTarget || itemPath.endsWith("/" + normalizedTarget)) {
                     return i;
                 }
             }
-            return -1;
+            return 0;
+        }
+    }
+
+    Connections {
+        target: current_wallpaper
+
+        function onReady(value) {
+            selector.selectCurrentWallpaper();
         }
     }
 }

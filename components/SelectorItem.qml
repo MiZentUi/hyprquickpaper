@@ -8,13 +8,12 @@ Item {
     required property ColorsAdapter colors
     required property string fileName
     required property string filePath
-    required property string cashePath   
+    required property string cashePath
     required property int selectedIndex
 
     property bool active: index === selectedIndex
 
     signal clicked(index: int)
-    
 
     Behavior on width {
         NumberAnimation {
@@ -28,6 +27,7 @@ Item {
         text: "Loading..."
         color: root.colors.border_color
         anchors.verticalCenter: parent.verticalCenter
+        leftPadding: parent.height * (-1 * root.configs.x_factor) / (root.configs.x_factor < 0 ? 2 : 1)
         font.pixelSize: 16
         font.bold: true
         transform: Shear {
