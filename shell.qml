@@ -49,6 +49,10 @@ PanelWindow {
         target_model: selector.model
         path: main.resolveEnvVars(config_file.adapter.wallpaper_path)
         cache_path: main.resolveEnvVars(config_file.adapter.cache_path)
+
+        onExited: {
+            selector.selectCurrentWallpaper();
+        }
     }
 
     FileView {
@@ -72,14 +76,11 @@ PanelWindow {
         config: config_file.adapter
         colors: colors_file.adapter
         selectedIndex: 0
-        onCountChanged: selectCurrentWallpaper()
         onSelected: (path, i) => {
             current_wallpaper.save(path.replace("//", "/"));
             Quickshell.execDetached(["bash", Quickshell.shellPath("commands.sh"), path.replace(/ /g, "\\ ")]);
             Qt.quit();
         }
-
-        Component.onCompleted: selectCurrentWallpaper()
 
         function selectCurrentWallpaper() {
             if (!current_wallpaper.isReady || model.count <= 0)
@@ -108,14 +109,6 @@ PanelWindow {
                 }
             }
             return 0;
-        }
-    }
-
-    Connections {
-        target: current_wallpaper
-
-        function onReady(value) {
-            selector.selectCurrentWallpaper();
         }
     }
 }
