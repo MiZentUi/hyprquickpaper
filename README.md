@@ -36,7 +36,7 @@ sudo pacman -S quickshell jq file imagemagick
 Now just clone this repo into Quickshell's config folder
 
 ```bash
-git clone https://github.com/iamsurjog/hyprquickpaper ~/.config/quickshell/hyprquickpaper
+git clone https://github.com/MiZentUi/hyprquickpaper ~/.config/quickshell/hyprquickpaper
 ```
 
 ## Config
