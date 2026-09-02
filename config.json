@@ -1,7 +1,8 @@
 {
-    "wallpaper_path": "/home/<usrname>/Pictures/Wallpapers/",
-    "cache_path": "/home/<usrname>/.cache/quickshell/thumbs/",
-    "number_of_pictures": 7,
-    "border_color": "#C27B63",
-    "cache_batch_size": 20
+    "wallpaper_path": "$HOME/dotfiles/images/wallpapers/",
+    "cache_path": "$HOME/.cache/quickshell/hyprquickpaper/",
+    "number_of_pictures": 6,
+    "cache_batch_size": 20,
+    "height": 500,
+    "x_factor": -0.25
 }

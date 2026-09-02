@@ -1,14 +1,14 @@
+pragma ComponentBehavior: Bound
 import Quickshell
-import Quickshell.Io // for Process
+import Quickshell.Io
 import QtQuick
-import Qt.labs.folderlistmodel
 import Quickshell.Wayland
 
-
+import "components"
 
 PanelWindow {
     id: main
-    implicitHeight: 500
+    implicitHeight: config_file.adapter.height
     implicitWidth: Screen.width
     color: "transparent"
     property int speed: 5000
@@ -20,224 +20,95 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
     Component.onCompleted: {
-        Quickshell.execDetached(["bash", Quickshell.shellPath("cache.sh"), Quickshell.shellDir])
-        console.log(Quickshell.shellDir)
+        Quickshell.execDetached(["bash", Quickshell.shellPath("cache.sh"), Quickshell.shellDir]);
+    }
+
+    function resolveEnvVars(inputPath) {
+        return inputPath.replace(/\$(\w+)/g, function (match, varName) {
+            return Quickshell.env(varName) ?? "";
+        });
     }
 
     FileView {
+        id: config_file
         path: Quickshell.shellPath("config.json")
         watchChanges: true
         onFileChanged: reload()
 
-        JsonAdapter {
-            id: configs
-            property string wallpaper_path
-            property string cache_path
-            property int number_of_pictures
-            property string border_color
+        onAdapterUpdated: {
+            img_finder.running = true;
+        }
+        onLoaded: {
+            img_finder.running = true;
+        }
+        ConfigAdapter {}
+    }
+
+    PathFinder {
+        id: img_finder
+        target_model: selector.model
+        path: main.resolveEnvVars(config_file.adapter.wallpaper_path)
+        cache_path: main.resolveEnvVars(config_file.adapter.cache_path)
+
+        onExited: {
+            selector.selectCurrentWallpaper();
         }
     }
 
-    FolderListModel {
-        id: folderModel
-        folder: "file://" + configs.wallpaper_path
-        showDirs: false
-        nameFilters: ["*.png","*.jpg"]
-        sortField: FolderListModel.Name
+    FileView {
+        id: colors_file
+        path: Quickshell.shellPath("colors.json")
+        watchChanges: true
+        onFileChanged: reload()
+        ColorsAdapter {}
     }
 
-    ListView {
-        id: list
+    Persistence {
+        id: current_wallpaper
+        path: main.resolveEnvVars(config_file.adapter.cache_path) + '/.current'
+    }
+
+    Selector {
+        id: selector
         anchors.fill: parent
         focus: true
-
-        model: folderModel
-        orientation: ListView.Horizontal
-        spacing: 4
-        clip: true
-        // reuseItems: true
-        cacheBuffer: width * 2
-
-        property int selectedIndex: 0
-        property real tileWidth: width / configs.number_of_pictures - 10
-
-        function clampIndex(i) {
-            return Math.max(0, Math.min(i, count - 1))
+        model: ListModel {}
+        config: config_file.adapter
+        colors: colors_file.adapter
+        selectedIndex: 0
+        onSelected: (path, i) => {
+            current_wallpaper.save(path.replace("//", "/"));
+            Quickshell.execDetached(["bash", Quickshell.shellPath("commands.sh"), path.replace(/ /g, "\\ ")]);
+            Qt.quit();
         }
 
-        function activateCurrent() {
-            const path = folderModel.get(selectedIndex, "filePath")
-            Quickshell.execDetached(["bash", Quickshell.shellPath("commands.sh"), path])
-            Qt.quit()
+        function selectCurrentWallpaper() {
+            if (!current_wallpaper.isReady || model.count <= 0)
+                return;
+
+            selectInitialIndex(findIndexByPath(current_wallpaper.load()));
         }
 
-        function clampX(x) {
-            return Math.max(0, Math.min(x, contentWidth - width))
+        function normalizePath(path) {
+            return (path || "").replace(/\/+/g, "/");
         }
 
-        function ensureVisibleAnimated(i) {
-            const step = tileWidth + spacing
-            const itemStart = i * step
-            const itemEnd = itemStart + tileWidth + 20
+        function findIndexByPath(targetPath) {
+            const normalizedTarget = normalizePath(targetPath);
 
-            if (itemStart < contentX)
-                contentX = clampX(itemStart)
-            else if (itemEnd > contentX + width)
-                contentX = clampX(itemStart - (width - step))
-        }
+            if (normalizedTarget === "")
+                return 0;
 
-        Behavior on contentX {
-            SmoothedAnimation {
-                id: anim
-                property int v: 10
-                // velocity: v
-                duration: 100
-            }
-        }
-        Component.onCompleted:{
-            anim.v = main.speed
-        }
+            for (var i = 0; i < model.count; ++i) {
+                const item = model.get(i);
+                const itemPath = normalizePath(item.filePath);
+                const itemName = normalizePath(item.fileName);
 
-
-        delegate: Item {
-            property bool active: index === list.selectedIndex
-            width: list.tileWidth
-            // width: active? 1000:list.tileWidth
-            height: 500
-            // visible: shownNow
-            Behavior on width{
-                NumberAnimation {
-                    duration: 50
-                    easing.type: Easing.OutCubic
+                if (itemPath === normalizedTarget || itemName === normalizedTarget || itemPath.endsWith("/" + normalizedTarget)) {
+                    return i;
                 }
             }
-            // anchors.centerIn: parent
-
-
-            // property bool shownNow:
-            //     index >= list.selectedIndex - configs.number_of_pictures &&
-            //     index <= list.selectedIndex + configs.number_of_pictures
-
-            Text{
-                id: alt
-                text: "Loading..."
-                color: configs.border_color
-                anchors.centerIn: parent
-                font.pixelSize: 16
-                transform: Shear { xFactor: -0.25 }
-            }
-            Image {
-                id: img
-                anchors.fill: parent
-                fillMode: Image.PreserveAspectCrop
-
-                asynchronous: true
-                cache: false
-                smooth: true
-
-                source: "file://" + configs.cache_path + fileName
-
-                // kind of an on-demand loading
-                // source: shownNow
-                //     ? "file://" + configs.cache_path + fileName
-                //     : ""
-
-                sourceSize.width: width
-                sourceSize.height: height
-
-                transform: Shear { xFactor: -0.25 }
-
-                Timer {
-                    id: retryTimer
-                    interval: 1000
-                    repeat: false
-                    onTriggered: {
-                        let s = img.source
-                        img.source = ""
-                        img.source = s
-                    }
-                }
-
-                onStatusChanged: {
-                    if (status === Image.Error) {
-                        alt.text = "Caching"
-                        retryTimer.start()
-                    }
-                }
-            }
-            Rectangle {
-                id: border
-                z: 10
-                visible: parent.active
-                width: list.tileWidth
-                height: 500
-                color: "transparent"
-
-                border.width: 4
-                border.color: configs.border_color
-
-                transform: Shear { xFactor: -0.25 }
-
-                // x: list.selectedIndex * (width + list.spacing) - list.contentX
-
-                // Behavior on x {
-                //     NumberAnimation {
-                //         duration: 160
-                //         easing.type: Easing.OutCubic
-                //     }
-                // }
-            }
-
-            MouseArea {
-                anchors.fill: parent
-
-                onClicked: {
-                    list.selectedIndex = index
-                    list.activateCurrent()
-                }
-
-                onWheel: function(wheel) {
-                    list.contentX = list.clampX(
-                        list.contentX - wheel.angleDelta.y * 2
-                    )
-                    wheel.accepted = false
-                }
-            }
-        }
-
-        Keys.onPressed: function(event) {
-            const step = 1
-            const big = configs.number_of_pictures
-
-            if (event.key === Qt.Key_J) {
-                anim.v = main.speed
-                selectedIndex = clampIndex(selectedIndex + step)
-                ensureVisibleAnimated(selectedIndex)
-
-            } else if (event.key === Qt.Key_K) {
-                anim.v = main.speed
-                selectedIndex = clampIndex(selectedIndex - step)
-                ensureVisibleAnimated(selectedIndex)
-
-            } else if (event.key === Qt.Key_D) {
-                anim.v = main.speed * big
-                selectedIndex = clampIndex(selectedIndex + big)
-                ensureVisibleAnimated(selectedIndex)
-
-            } else if (event.key === Qt.Key_U) {
-                anim.v = main.speed * big
-                selectedIndex = clampIndex(selectedIndex - big)
-                ensureVisibleAnimated(selectedIndex)
-
-            } else if (event.key === Qt.Key_Space || event.key === Qt.Key_Return) {
-                activateCurrent()
-
-            } else if (event.key === Qt.Key_Escape) {
-                Qt.quit()
-
-            } else return
-
-            event.accepted = true
+            return 0;
         }
     }
 }
