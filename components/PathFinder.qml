@@ -33,16 +33,6 @@ Process {
             });
 
             const sortedItems = items.sort((a, b) => {
-                if (a.topLevel !== b.topLevel) {
-                    return a.topLevel.localeCompare(b.topLevel, undefined, {
-                        sensitivity: "base"
-                    });
-                }
-
-                if (a.slashCount !== b.slashCount) {
-                    return b.slashCount - a.slashCount;
-                }
-
                 return a.path.localeCompare(b.path, undefined, {
                     sensitivity: "base"
                 });

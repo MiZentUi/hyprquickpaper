@@ -39,6 +39,7 @@ Item {
         id: img
         anchors.fill: parent
         fillMode: Image.PreserveAspectCrop
+        verticalAlignment: Image.AlignTop
 
         asynchronous: true
         cache: false
@@ -71,6 +72,7 @@ Item {
             }
         }
     }
+
     Rectangle {
         id: border
         z: 10
